@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game</title>
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000; /* Set background color to black */
+        }
+
+        #game-board {
+            position: relative;
+            width: 400px; /* Set the width of the game board */
+            height: 400px; /* Set the height of the game board */
+            border: 2px solid #fff; /* Set border color to white */
+            display: grid;
+            grid-template-columns: repeat(20, 20px); /* Adjust based on the number of squares you want */
+            grid-template-rows: repeat(20, 20px); /* Adjust based on the number of squares you want */
+        }
+
+        .border-square {
+            background-color: #fff;
+            width: 20px;
+            height: 20px;
+        }
+
+        .snake-part, .apple {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+        }
+
+        .snake-part {
+            background-color: #4CAF50;
+        }
+
+        .apple {
+            background-color: #FF0000;
+        }
+
+        #start-button {
+            font-size: 16px;
+            padding: 10px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-board"></div>
+    <button id="start-button">Start Game</button>
+
+    <script>
+        const GRID_SIZE = 20;
+        const TILE_SIZE = 20;
+        const BOARD_SIZE = GRID_SIZE * TILE_SIZE;
+
+        const gameBoard = document.getElementById('game-board');
+        let snake = [{ x: 10, y: 10 }];
+        let direction = 'right';
+        let apple = getRandomPosition();
+        let gameRunning = false;
+        let intervalId;
+
+        function getRandomPosition() {
+            return {
+                x: Math.floor(Math.random() * GRID_SIZE),
+                y: Math.floor(Math.random() * GRID_SIZE)
+            };
+        }
+
+        function draw() {
+            gameBoard.innerHTML = '';
+
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const square = document.createElement('div');
+                    square.className = 'border-square';
+                    gameBoard.appendChild(square);
+                }
+            }
+
+            snake.forEach(part => {
+                const snakePart = document.createElement('div');
+                snakePart.className = 'snake-part';
+                snakePart.style.left = part.x * TILE_SIZE + 'px';
+                snakePart.style.top = part.y * TILE_SIZE + 'px';
+                gameBoard.appendChild(snakePart);
+            });
+
+            const appleElement = document.createElement('div');
+            appleElement.className = 'apple';
+            appleElement.style.left = apple.x * TILE_SIZE + 'px';
+            appleElement.style.top = apple.y * TILE_SIZE + 'px';
+            gameBoard.appendChild(appleElement);
+        }
+
+        function update() {
+            if (!gameRunning) return;
+
+            const head = { ...snake[0] };
+
+            switch (direction) {
+                case 'up':
+                    head.y -= 1;
+                    break;
+                case 'down':
+                    head.y += 1;
+                    break;
+                case 'left':
+                    head.x -= 1;
+                    break;
+                case 'right':
+                    head.x += 1;
+                    break;
+            }
+
+            snake.unshift(head);
+
+            if (head.x === apple.x && head.y === apple.y) {
+                apple = getRandomPosition();
+            } else {
+                snake.pop();
+            }
+
+            checkCollision();
+            draw();
+        }
+
+        function checkCollision() {
+            const head = snake[0];
+
+            if (head.x < 0 || head.y < 0 || head.x >= GRID_SIZE || head.y >= GRID_SIZE) {
+                alert('Game Over!');
+                resetGame();
+            }
+
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    alert('Game Over!');
+                    resetGame();
+                }
+            }
+        }
+
+        function resetGame() {
+            clearInterval(intervalId);
+            snake = [{ x: 10, y: 10 }];
+            direction = 'right';
+            apple = getRandomPosition();
+            draw();
+            gameRunning = false;
+            startButton.disabled = false;
+        }
+
+        const startButton = document.getElementById('start-button');
+        startButton.addEventListener('click', function () {
+            startGame();
+        });
+
+        function startGame() {
+            if (!gameRunning) {
+                gameRunning = true;
+                startButton.disabled = true;
+                intervalId = setInterval(update, 200);
+            }
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (!gameRunning) return;
+
+            switch (event.key) {
+                case 'ArrowUp':
+                    if (direction !== 'down') direction = 'up';
+                    break;
+                case 'ArrowDown':
+                    if (direction !== 'up') direction = 'down';
+                    break;
+                case 'ArrowLeft':
+                    if (direction !== 'right') direction = 'left';
+                    break;
+                case 'ArrowRight':
+                    if (direction !== 'left') direction = 'right';
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
